@@ -1,4 +1,9 @@
-replicate.py: main analyses \n
-threed.py: quan analysis \n
-phewas.py: phewas analysis \n
+```bash
+replicate.py: main analyses
+
+threed.py: quan analysis
+
+phewas.py: phewas analysis
+
 phewas-plot.ipynb: phewas plot
+```
