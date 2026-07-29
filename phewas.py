@@ -2,7 +2,7 @@
 Author: Kesar-Chi && momiji0613@163.com
 Date: 2025-01-14 15:56:33
 LastEditors: Kesar-Chi && momiji0613@163.com
-LastEditTime: 2025-07-03 15:27:37
+LastEditTime: 2025-06-03 15:27:37
 FilePath: /BIGCode/project/GeneHunt/LPA/report1/phewas.py
 Description: Institute: Beijing Institute Of Genomics, CAS.
 
@@ -18,7 +18,6 @@ from glob import glob
 import argparse
 import os
 import sys
-sys.path.append('/home/shaoqi/BIGCode/')
 from brush import statools
 import warnings
 warnings.filterwarnings('ignore')
@@ -30,26 +29,21 @@ if __name__ == '__main__':
     parser.add_argument('-pcsk9', '--pcsk9', action='store_true', help='pcsk9')
     args = parser.parse_args()
     
-    file_cov = "/pmaster/shaoqi/data/UKB/noProt_UKB_drug.txt"
-    # root = "/hwmaster/shaoqi/proj/GeneHunt/LPA/phewas/split/"
-    root = "/pmaster/shaoqi/proj/GeneHunt/LPA/phewas-cover/"
+    file_cov = "~/data/noProt_UKB_drug.txt"
+    root = "~/proj/phewas/split/"
     if args.lpa:
         save_dir = f"{root}/lpa"
     elif args.pcsk9:
         save_dir = f"{root}/ldl"
     else:
         save_dir = f"{root}/joint"
-    file_score_lpa = '/hwmaster/shaoqi/proj/GeneHunt/LPA/FIN/LPA/cover0702/model_res/best.score'
-    file_score_PCSK9 = '/hwmaster/shaoqi/proj/GeneHunt/LPA/decode/cover2/model_res/best.score'
-    # file_score_lpa = '/hwmaster/shaoqi/proj/GeneHunt/LPA/FIN/LPA/split-cis-100k/TEST-100k.score'
-    # file_score_PCSK9 = '/hwmaster/shaoqi/proj/GeneHunt/LPA/decode/split-cis-100k/TEST-PCSK9-100K.score'
-    # file_score_lpa = root + '/LPA-250k.txt'
-    # file_score_PCSK9 = root + '/PCSK9-250k.txt'
+    file_score_lpa = '~/proj/FIN/LPA/cover0702/model_res/best.score'
+    file_score_PCSK9 = '~/proj/decode/cover2/model_res/best.score'
     # file_score_lpa = root + '/jc-lpa.sscore'
     # file_score_PCSK9 = root + '/best.score'
-    file_valid = '/hwmaster/shaoqi/proj/GeneHunt/LPA/phewas/d118/White-rm2nd.val'
-    file_white = '/hwmaster/shaoqi/proj/GeneHunt/LPA/phewas/d118/White-rm2nd.eid'
-    file_pheno = '/pmaster/shaoqi/data/UKB/phewas/'
+    file_valid = '~/proj/phewas/d118/White-rm2nd.val'
+    file_white = '~/proj/phewas/d118/White-rm2nd.eid'
+    file_pheno = '~/data/phewas/'
 
     cov_list = ['smoking', 'age', 'sex', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5', 'PC6', 'PC7', 'PC8', 'PC9', 'PC10']
     y = ['survive_time', 'incident', 'prevalence', 'CAD', 'tc_a', 'ldl_a', 'apob', 'hdl_a', 'tg_a']
