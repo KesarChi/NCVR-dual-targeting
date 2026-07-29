@@ -28,10 +28,8 @@ def parse_args():
     parser.add_argument("--covariates", default="age,sex,PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10", type=str)
     parser.add_argument('-res', "--residual", default="PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10", type=str)
     parser.add_argument("--keep", help="keep file, one col, no header", type=str)
-    parser.add_argument("--markername", default="Lpa,ldl", help="col names for lpa and ldl-c levels", type=str)
     parser.add_argument("--rvas", default=False, action="store_true", help="perform rvas?")
     parser.add_argument("--score", default=False, action="store_true", help="perform score analysis?")
-    parser.add_argument("--quant", default=False, action="store_true", help="perform quant analysis?")
     return parser.parse_args()
 
 
@@ -155,67 +153,6 @@ def Score(df, phenos, covariates, masks, root='./'):
     analysis(df, groups, covariates, phenos, f"{root}/Result2-ScoreMedian.tsv", f'{masks[0]}-high-{masks[1]}-high')
 
 
-def Quant(df, pheno, covariates, output, pair1=['Lpas', 'lpa'], pair2=['LDLs', 'ldl']):
-    print(f"Quant analysis for {pheno}:")
-    res_lpa_percent = []
-    res_ldl_percent = []
-    res_beta = []
-    res_beta_lpal = []
-    res_beta_pcsk9l = []
-    res_diff_lpa = []
-    res_diff_ldl = []
-    res_p = []
-    res_p_lpa = []
-    res_p_ldl = []
-    res_se = []
-    res_se_lpa = []
-    res_se_ldl = []
-
-    for i in range(46):
-        top1_lpa = df[pair1[0]].quantile(0.5 + 0.01*i)
-        bot1_lpa = df[pair1[0]].quantile(0.5 - 0.01*i)
-        top1_lpa_rows = df[df[pair1[0]] >= top1_lpa].index
-        bot1_lpa_rows = df[df[pair1[0]] <= bot1_lpa].index
-        df['top-lpa'] = 0
-        df.loc[top1_lpa_rows, 'top-lpa'] = 1
-        df['bot-lpa'] = 0
-        df.loc[bot1_lpa_rows, 'bot-lpa'] = 1
-        for j in range(46):
-            res_lpa_percent.append(0.5 - 0.01*i)
-            res_ldl_percent.append(0.5 - 0.01*j)
-            top1_pcsk9 = df[pair2[0]].quantile(0.5 + 0.01*j)
-            bot1_pcsk9 = df[pair2[0]].quantile(0.5 - 0.01*j)
-            top1_pcsk9_rows = df[df[pair2[0]] >= top1_pcsk9].index
-            bot1_pcsk9_rows = df[df[pair2[0]] <= bot1_pcsk9].index
-            df['top-pcsk9'] = 0
-            df.loc[top1_pcsk9_rows, 'top-pcsk9'] = 1
-            df['bot-pcsk9'] = 0
-            df.loc[bot1_pcsk9_rows, 'bot-pcsk9'] = 1
-            
-            df['T-LPA-T-PCSK9'] = df['top-lpa'] * df['top-pcsk9']
-            df['T-LPA-B-PCSK9'] = df['top-lpa'] * df['bot-pcsk9']
-            df['B-LPA-T-PCSK9'] = df['bot-lpa'] * df['top-pcsk9']
-            df['B-LPA-B-PCSK9'] = df['bot-lpa'] * df['bot-pcsk9']
-            newtest = df[(df['T-LPA-T-PCSK9']==1) | (df['T-LPA-B-PCSK9']==1) | (df['B-LPA-T-PCSK9']==1) | (df['B-LPA-B-PCSK9']==1)].reset_index(drop=True)
-            res_diff_lpa.append(newtest.loc[newtest['top-lpa']==1, pair1[1]].mean() - newtest.loc[newtest['bot-lpa']==1, pair1[1]].mean())
-            res_diff_ldl.append(newtest.loc[newtest['top-pcsk9']==1, pair2[1]].mean() - newtest.loc[newtest['bot-pcsk9']==1, pair2[1]].mean())
-            
-            model = logit_model(newtest, pheno, ['B-LPA-B-PCSK9', 'B-LPA-T-PCSK9', 'T-LPA-B-PCSK9'], covariates)
-            res_beta.append(model.params['B-LPA-B-PCSK9'])
-            res_beta_lpal.append(model.params['B-LPA-T-PCSK9'])
-            res_beta_pcsk9l.append(model.params['T-LPA-B-PCSK9'])
-            res_se.append(model.bse['B-LPA-B-PCSK9'])
-            res_se_lpa.append(model.bse['B-LPA-T-PCSK9'])
-            res_se_ldl.append(model.bse['T-LPA-B-PCSK9'])
-            res_p.append(model.pvalues['B-LPA-B-PCSK9'])
-            res_p_lpa.append(model.pvalues['B-LPA-T-PCSK9'])
-            res_p_ldl.append(model.pvalues['T-LPA-B-PCSK9'])
-            
-    sv = pd.DataFrame({'lpa-percent': res_lpa_percent, 'ldl-percent': res_ldl_percent, 'lpa-diff': res_diff_lpa, 'ldl-diff': res_diff_ldl, 'beta-BB': res_beta, 'beta-lpaB': res_beta_lpal, 'beta-pcsk9B': res_beta_pcsk9l, 'p-BB': res_p, 'p-lpaB': res_p_lpa, 'p-pcsk9B': res_p_ldl, 'se-BB': res_se, 'se-lpaB': res_se_lpa, 'se-pcsk9B': res_se_ldl})
-    sv.to_csv(output, index=False, sep='\t')
-    print(f"Save results to {output}")
-
-
 def analysis(df, groups, covariates, phenos, output, ref):
     results = []
     for p in phenos:
@@ -264,7 +201,7 @@ if __name__ == "__main__":
         geno = geno.merge(cov, on="eid", how="inner")
         RVAS(geno, phenos, cov_list, maskr, args.workdir)
         
-    if args.score or args.quant:
+    if args.score:
         masks = ['Lpas', 'LDLs']
         score = read_and_merge(args.prs, masks)
         score.rename(columns={score.columns[0]: "eid"}, inplace=True)
@@ -274,8 +211,3 @@ if __name__ == "__main__":
         score[f'{masks[1]}'] = get_resid(score, masks[1], residual_list)
         if args.score:
             Score(score, phenos, cov_list, masks, args.workdir)
-        if args.quant:
-            mname = args.markername.split(',')
-            p1, p2 = [masks[0], mname[0]], [masks[1], mname[1]]
-            for p in phenos:
-                Quant(score, p, cov_list, f"{args.workdir}/Result3-{p}.tsv", p1, p2)
